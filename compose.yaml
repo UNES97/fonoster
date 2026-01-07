@@ -3,7 +3,7 @@ services:
     image: fonoster/dashboard:0.16.7
     restart: unless-stopped
     expose:
-      - 3030:3030
+      - "3030"
     environment:
       - SERVER_DASHBOARD_SESSION_SECRET
 
@@ -55,7 +55,7 @@ services:
       - APISERVER_TWILIO_AUTH_TOKEN
       - APISERVER_TWILIO_PHONE_NUMBER
     expose:
-      - 50051:50051
+      - "50051"
     volumes:
       - ./config/keys:/opt/fonoster/keys:ro
       - ./config/integrations.json:/opt/fonoster/integrations.json:ro
@@ -64,7 +64,7 @@ services:
     image: fonoster/autopilot:0.16.7
     restart: unless-stopped
     expose:
-      - 50061
+      - "50061"
     environment:
       - AUTOPILOT_AWS_S3_ACCESS_KEY_ID
       - AUTOPILOT_AWS_S3_ENDPOINT
@@ -90,37 +90,28 @@ services:
       LOGS_FORMAT: ${ROUTR_LOGS_FORMAT}
       LOGS_LEVEL: ${ROUTR_LOGS_LEVEL}
       LOGS_TRANSPORT: ${ROUTR_LOGS_TRANSPORT}
-      NATS_PUBLISHER_ENABLED: true
+      NATS_PUBLISHER_ENABLED: "true"
       NATS_PUBLISHER_URL: ${ROUTR_NATS_PUBLISHER_URL}
       RTPENGINE_HOST: ${ROUTR_RTPENGINE_HOST}
       START_INTERNAL_DB: "false"
       CONNECT_VERIFIER_PUBLIC_KEY_PATH: /etc/routr/keys/public.pem
     expose:
-      - 51907
-      - 51908
+      - "51907"
+      - "51908"
     ports:
       - "15060:5060/udp"
       - "15061-15063:5061-5063/udp"
     volumes:
       - ./config/keys/public.pem:/etc/routr/keys/public.pem
 
-  # RTPEngine uses a range of ports to handle RTP traffic. Because exposing a large range of ports 
-  # is not possible in Docker, we need to use network_mode: host.
-  #
-  # Unfortunately, network_mode: host is not supported for Windows or Mac.
-  # In those cases, we need to use a different approach.
-  #
-  # By default we are opening a small range of ports (10000-10100) to handle RTP traffic.
-  # However, this is not enough for production environments.
-  #
-  # We recommend that when using Linux you use network_mode: host and remove the ports section.
   rtpengine:
     image: fonoster/rtpengine:0.3.17
     restart: unless-stopped
     platform: linux/x86_64
+    network_mode: host
     environment:
-      PORT_MAX: ${RTPENGINE_PORT_MAX}
       PORT_MIN: ${RTPENGINE_PORT_MIN}
+      PORT_MAX: ${RTPENGINE_PORT_MAX}
       PUBLIC_IP: ${RTPENGINE_PUBLIC_IP}
 
   asterisk:
@@ -132,14 +123,14 @@ services:
       ARI_USERNAME: ${ASTERISK_ARI_USERNAME}
       CODECS: ${ASTERISK_CODECS}
       DTMF_MODE: ${ASTERISK_DTMF_MODE}
-      RTP_PORT_END: ${ASTERISK_RTP_PORT_END}
       RTP_PORT_START: ${ASTERISK_RTP_PORT_START}
+      RTP_PORT_END: ${ASTERISK_RTP_PORT_END}
       SIPPROXY_HOST: ${ASTERISK_SIPPROXY_HOST}
       SIPPROXY_PORT: ${ASTERISK_SIPPROXY_PORT}
       SIPPROXY_SECRET: ${ASTERISK_SIPPROXY_SECRET}
       SIPPROXY_USERNAME: ${ASTERISK_SIPPROXY_USERNAME}
     expose:
-      - 6060
+      - "6060"
 
   postgres:
     image: postgres:16.10-alpine3.22
@@ -150,7 +141,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       TZ: UTC
     expose:
-      - 5432
+      - "5432"
     volumes:
       - db:/var/lib/postgresql/data
 
@@ -158,7 +149,7 @@ services:
     image: influxdb:2.7
     restart: unless-stopped
     expose:
-      - 8086
+      - "8086"
     environment:
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_INIT_TOKEN}
       DOCKER_INFLUXDB_INIT_BUCKET: calls
@@ -173,23 +164,15 @@ services:
     image: nats:2.11.8
     restart: unless-stopped
     expose:
-      - 4222
+      - "4222"
 
   envoy:
     image: envoyproxy/envoy:v1.35.0
     restart: unless-stopped
     volumes:
-      - ./config/envoy.yaml:/etc/envoy/envoy.yaml:ro
-      # If using letsencrypt, you need to mount the letsencrypt directory
-      # by uncommenting the following line and changing the domain name to match your domain.
-      #
-      # Symbolic links will not work here!!!
-      #
-      # - ./path/to/letsencrypt:/etc/letsencrypt:ro
+      - ./config:/etc/envoy:ro
     ports:
-      - 8449:8449
-      # If using letsencrypt, you need to expose port 443 and remove the default HTTP port (8449)
-      # - 443:443
+      - "8449:8449"
 
 volumes:
   db:
