@@ -118,9 +118,6 @@ services:
     image: fonoster/rtpengine:0.3.17
     restart: unless-stopped
     platform: linux/x86_64
-    ports: 
-      - 10000-10100:10000-10100/udp
-      - 8082:8080
     environment:
       PORT_MAX: ${RTPENGINE_PORT_MAX}
       PORT_MIN: ${RTPENGINE_PORT_MIN}
