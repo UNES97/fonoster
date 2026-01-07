@@ -99,8 +99,8 @@ services:
       - 51907
       - 51908
     ports:
-      - 5060:5060/udp
-      - "5061-5063:5061-5063/udp"
+      - "15060:5060/udp"
+      - "15061-15063:5061-5063/udp"
     volumes:
       - ./config/keys/public.pem:/etc/routr/keys/public.pem
 
